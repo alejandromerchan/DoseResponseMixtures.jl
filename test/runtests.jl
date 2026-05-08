@@ -1,4 +1,8 @@
+using Test
 using DoseResponseMixtures
-using TestItemRunner
 
-@run_package_tests verbose=true
+@testset "DoseResponseMixtures.jl" begin
+    include("test_population.jl")
+    include("test_simulate.jl")
+    include("test_estimators.jl")
+end
