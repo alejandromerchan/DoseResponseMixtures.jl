@@ -1,0 +1,25 @@
+# Go to https://citation-file-format.github.io/cff-initializer-javascript/#/ to finish this
+cff-version: 1.2.0
+title: DoseResponseMixtures.jl
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Alejandro
+    family-names: Merchan
+    email: hector.merchan@gmail.com
+repository-code: "https://github.com/alejandromerchan/DoseResponseMixtures.jl"
+abstract: >-
+  Dose-response bioassay analysis under mixture-distributed tolerance, with
+  a focus on populations whose phenotypic tolerance distribution arises from
+  quantitative-genetic mixtures of genotype classes (e.g., during the spread
+  of a resistance allele or under refuge-based resistance management).
+keywords:
+  - julia
+  - bioassay
+  - dose-response
+  - resistance-evolution
+  - quantitative-genetics
+  - mixture-models
+license: MIT
