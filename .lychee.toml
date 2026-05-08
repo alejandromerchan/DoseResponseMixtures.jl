@@ -4,6 +4,8 @@ exclude = [
   "^https://github.com/.*/releases/tag/v.*$",
   "^https://doi.org/FIXME$",
   "^https://alejandromerchan.github.io/DoseResponseMixtures.jl/stable$",
+  # Excluded until GitHub Pages is enabled and Documenter deploys the dev docs
+  "^https://alejandromerchan.github.io/DoseResponseMixtures.jl/dev$",
 
   "zenodo.org/badge/DOI/FIXME$"
 ]
