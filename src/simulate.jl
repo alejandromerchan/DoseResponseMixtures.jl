@@ -55,8 +55,8 @@ function simulate_bioassay(
                 fill(pop.mean_log_lc50, n_per_replicate)
             end
             n_dead = 0
-            for lc50 in log_lc50s
-                p = 1 / (1 + exp(-pop.slope * (log_dose - lc50)))
+            for log_lc50 in log_lc50s
+                p = 1 / (1 + exp(-pop.slope * (log_dose - log_lc50)))
                 n_dead += rand(rng) < p
             end
             log_dose_col[row] = log_dose
