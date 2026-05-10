@@ -3,6 +3,33 @@ using Distributions: Normal
 using DataFrames: DataFrame
 
 """
+    sample_log_tolerances(pop, n; rng) -> Vector{Float64}
+
+Sample `n` individual log-LC50 values from the tolerance distribution of `pop`.
+
+Returns a length-`n` vector drawn i.i.d. from
+`Normal(pop.mean_log_lc50, pop.sd_log_lc50)`. When `pop.sd_log_lc50 == 0`,
+all returned values equal `pop.mean_log_lc50` (homogeneous population).
+
+# Arguments
+- `pop::UnimodalPopulation`: Population tolerance distribution
+- `n::Integer`: Number of individuals to sample (> 0)
+- `rng::AbstractRNG`: Random number generator (default: `Random.default_rng()`)
+
+# Returns
+A `Vector{Float64}` of length `n` containing sampled log-LC50 values.
+"""
+function sample_log_tolerances(
+    pop::UnimodalPopulation,
+    n::Integer;
+    rng::AbstractRNG = default_rng(),
+)
+    n > 0 || throw(ArgumentError("n must be positive"))
+
+    rand(rng, Normal(pop.mean_log_lc50, pop.sd_log_lc50), n)
+end
+
+"""
     simulate_bioassay(pop, doses, n_replicates, n_per_replicate; rng)
 
 Simulate a dose-response bioassay for a `UnimodalPopulation`.
