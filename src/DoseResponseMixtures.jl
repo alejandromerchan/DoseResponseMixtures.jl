@@ -15,7 +15,7 @@ include("simulate.jl")
 include("estimators.jl")
 
 export AbstractPopulation, UnimodalPopulation
-export simulate_bioassay
+export simulate_bioassay, sample_log_tolerances
 export fit_2pl
 
 end
