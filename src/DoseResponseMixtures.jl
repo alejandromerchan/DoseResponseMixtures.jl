@@ -14,7 +14,8 @@ include("population.jl")
 include("simulate.jl")
 include("estimators.jl")
 
-export AbstractPopulation, UnimodalPopulation
+export AbstractPopulation, UnimodalPopulation, HWEMixturePopulation
+export genotype_means, genotype_frequencies
 export simulate_bioassay, sample_log_tolerances
 export fit_2pl
 
