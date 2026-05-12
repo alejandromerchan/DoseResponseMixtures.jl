@@ -1,5 +1,5 @@
 using Random: AbstractRNG, default_rng
-using Distributions: Normal
+using Distributions: Normal, Categorical
 using DataFrames: DataFrame
 
 """
@@ -84,6 +84,116 @@ function simulate_bioassay(
             n_dead = 0
             for log_lc50 in log_lc50s
                 p = 1 / (1 + exp(-pop.slope * (log_dose - log_lc50)))
+                n_dead += rand(rng) < p
+            end
+            log_dose_col[row] = log_dose
+            replicate_col[row] = rep
+            n_dead_col[row] = n_dead
+        end
+    end
+
+    return DataFrame(;
+        log_dose = log_dose_col,
+        replicate = replicate_col,
+        n_dead = n_dead_col,
+        n_total = n_total_col,
+    )
+end
+
+"""
+    _sample_genotypes_and_log_tolerances(pop::HWEMixturePopulation, n, rng)
+        -> (genotypes::Vector{Symbol}, log_tolerances::Vector{Float64})
+
+Internal helper. Returns a tuple of (genotypes, log_tolerances) where each
+vector has length n. Genotypes are :SS, :SR, or :RR. log_tolerances are
+drawn from the appropriate genotype-specific Normal distribution.
+
+Not exported. Used by `sample_log_tolerances` and `simulate_bioassay`
+methods for `HWEMixturePopulation`, and by tests for HWE verification.
+"""
+function _sample_genotypes_and_log_tolerances(
+    pop::HWEMixturePopulation,
+    n::Integer,
+    rng::AbstractRNG,
+)
+    freqs = genotype_frequencies(pop)
+    means = genotype_means(pop)
+    genotype_categorical = Categorical([freqs.SS, freqs.SR, freqs.RR])
+    genotype_symbols = (:SS, :SR, :RR)
+    genotype_mean_array = (means.SS, means.SR, means.RR)
+
+    genotype_indices = rand(rng, genotype_categorical, n)
+    genotypes = [genotype_symbols[i] for i in genotype_indices]
+
+    # Sample log-tolerances. Distributions.jl handles Normal(μ, 0) as a
+    # point mass, so no special case is needed for sd = 0.
+    σ = pop.sd_log_lc50
+    log_tolerances =
+        [rand(rng, Normal(genotype_mean_array[i], σ)) for i in genotype_indices]
+
+    return (genotypes, log_tolerances)
+end
+
+function sample_log_tolerances(
+    pop::HWEMixturePopulation,
+    n::Integer;
+    rng::AbstractRNG = default_rng(),
+)
+    n > 0 || throw(ArgumentError("n must be positive"))
+    _, log_tolerances = _sample_genotypes_and_log_tolerances(pop, n, rng)
+    return log_tolerances
+end
+
+"""
+    simulate_bioassay(pop::HWEMixturePopulation, doses, n_replicates, n_per_replicate; rng)
+
+Simulate a dose-response bioassay for an `HWEMixturePopulation`.
+
+For each (dose, replicate) combination, draws `n_per_replicate` individual
+log-LC50 values from the HWE mixture tolerance distribution, then samples
+Bernoulli mortality outcomes using the individual-level log-logistic model.
+The output DataFrame has the same structure as the unimodal version; no
+genotype column is included.
+
+# Arguments
+- `pop::HWEMixturePopulation`: Population tolerance distribution
+- `doses`: Iterable of positive dose values
+- `n_replicates::Integer`: Number of replicates per dose level
+- `n_per_replicate::Integer`: Number of individuals per replicate
+- `rng::AbstractRNG`: Random number generator (default: `Random.default_rng()`)
+
+# Returns
+A `DataFrame` with columns `:log_dose`, `:replicate`, `:n_dead`, `:n_total`.
+"""
+function simulate_bioassay(
+    pop::HWEMixturePopulation,
+    doses,
+    n_replicates::Integer,
+    n_per_replicate::Integer;
+    rng::AbstractRNG = default_rng(),
+)
+    all(>(0), doses) || throw(ArgumentError("all doses must be positive"))
+    n_replicates > 0 || throw(ArgumentError("n_replicates must be positive"))
+    n_per_replicate > 0 || throw(ArgumentError("n_per_replicate must be positive"))
+
+    dose_vec = collect(doses)
+    n_rows = length(dose_vec) * n_replicates
+
+    log_dose_col = Vector{Float64}(undef, n_rows)
+    replicate_col = Vector{Int}(undef, n_rows)
+    n_dead_col = Vector{Int}(undef, n_rows)
+    n_total_col = fill(Int(n_per_replicate), n_rows)
+
+    row = 0
+    for dose in dose_vec
+        log_dose = log(Float64(dose))
+        for rep = 1:n_replicates
+            row += 1
+            _, log_tolerances =
+                _sample_genotypes_and_log_tolerances(pop, n_per_replicate, rng)
+            n_dead = 0
+            for log_tolerance in log_tolerances
+                p = 1 / (1 + exp(-pop.slope * (log_dose - log_tolerance)))
                 n_dead += rand(rng) < p
             end
             log_dose_col[row] = log_dose

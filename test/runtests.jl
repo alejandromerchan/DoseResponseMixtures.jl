@@ -6,4 +6,5 @@ using DoseResponseMixtures
     include("test_simulate.jl")
     include("test_estimators.jl")
     include("test_sample.jl")
+    include("test_hwe_mixture.jl")
 end
