@@ -5,6 +5,7 @@ DoseResponseMixtures = "a38899f3-65b4-487f-b9d5-f6441560ab2e"
 
 [compat]
 Documenter = "1"
+LiveServer = "1.5.0"
 
 [sources]
 DoseResponseMixtures = {path = ".."}
